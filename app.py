@@ -72,6 +72,9 @@ def load_excel(file) -> pd.DataFrame:
 SAMPLE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "data.xlsx")
 SAMPLE_EXISTS = os.path.exists(SAMPLE_PATH)
 
+# Caminho da logo exibida na barra lateral
+LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "logo.png")
+
 
 def to_excel_bytes(df: pd.DataFrame) -> bytes:
     """Converte DataFrame para bytes de Excel para download."""
@@ -239,8 +242,13 @@ with st.sidebar:
         "<small style='color:#90A4AE'>ART Check v1.0<br>"
         "Desenvolvido para análise e melhoria de ARTs<br><br>"
         "Produzido por: Leonardo Manzoli Stoco<br>"
-        "leonardo.stoco@sodexo.com<br>"
-        "27 9 8133 7562<br><br>"
+        "leonardo.stoco@sodexo.com</small>",
+        unsafe_allow_html=True,
+    )
+    if os.path.exists(LOGO_PATH):
+        st.image(LOGO_PATH, width=120)
+    st.markdown(
+        "<small style='color:#90A4AE'>Sodexo<br>"
         "Limpeza Industrial<br>"
         "Porto de Tubarão</small>",
         unsafe_allow_html=True,
