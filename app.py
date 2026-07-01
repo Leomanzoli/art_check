@@ -197,14 +197,14 @@ with st.sidebar:
     uploaded_file = st.file_uploader(
         "📂 Carregar planilha (.xlsx)",
         type=["xlsx"],
-        help=(
-            "Carregue o arquivo Excel exportado do sistema de ARTs.\n\n"
-            "📊 Baixe os dados no BI: "
-            "[BI Gerenciamento de Riscos - Power BI]"
-            "(https://app.powerbi.com/groups/me/apps/f1e0a66d-7fb8-481d-837f-121fc3dc59be/"
-            "reports/f81a0274-59c8-4c78-9a60-8a6f011b9ae2/"
-            "ReportSection194586a4e36e9ba90a55?experience=power-bi)"
-        ),
+        help="Carregue o arquivo Excel exportado do sistema de ARTs.",
+    )
+
+    st.markdown(
+        "📊 [Baixe os dados no BI: Gerenciamento de Riscos]"
+        "(https://app.powerbi.com/groups/me/apps/f1e0a66d-7fb8-481d-837f-121fc3dc59be/"
+        "reports/f81a0274-59c8-4c78-9a60-8a6f011b9ae2/"
+        "ReportSection194586a4e36e9ba90a55?experience=power-bi)"
     )
 
     st.markdown("---")
