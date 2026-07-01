@@ -68,10 +68,6 @@ def load_excel(file) -> pd.DataFrame:
     return df
 
 
-# Caminho do arquivo de exemplo (pode não existir em deploy público)
-SAMPLE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "data.xlsx")
-SAMPLE_EXISTS = os.path.exists(SAMPLE_PATH)
-
 # Caminho da logo exibida na barra lateral
 LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "logo.png")
 
@@ -201,17 +197,13 @@ with st.sidebar:
     uploaded_file = st.file_uploader(
         "📂 Carregar planilha (.xlsx)",
         type=["xlsx"],
-        help="Carregue o arquivo Excel exportado do sistema de ARTs.",
-    )
-
-    use_sample = st.checkbox(
-        "Usar dados de exemplo",
-        value=uploaded_file is None and SAMPLE_EXISTS,
-        disabled=not SAMPLE_EXISTS,
         help=(
-            "Carrega o arquivo assets/data.xlsx como exemplo."
-            if SAMPLE_EXISTS
-            else "Dados de exemplo indisponíveis. Faça o upload de uma planilha .xlsx."
+            "Carregue o arquivo Excel exportado do sistema de ARTs.\n\n"
+            "📊 Baixe os dados no BI: "
+            "[BI Gerenciamento de Riscos - Power BI]"
+            "(https://app.powerbi.com/groups/me/apps/f1e0a66d-7fb8-481d-837f-121fc3dc59be/"
+            "reports/f81a0274-59c8-4c78-9a60-8a6f011b9ae2/"
+            "ReportSection194586a4e36e9ba90a55?experience=power-bi)"
         ),
     )
 
@@ -262,11 +254,6 @@ def load_cached(file_bytes: bytes) -> pd.DataFrame:
     return load_excel(BytesIO(file_bytes))
 
 
-@st.cache_data
-def load_sample() -> pd.DataFrame:
-    return load_excel(SAMPLE_PATH)
-
-
 # Inicializar estado
 if "df_edited" not in st.session_state:
     st.session_state.df_edited = None
@@ -280,13 +267,6 @@ if uploaded_file is not None:
     file_bytes = uploaded_file.getvalue()
     current_source_id = f"upload_{uploaded_file.name}_{len(file_bytes)}"
     df_source = load_cached(file_bytes)
-elif use_sample:
-    current_source_id = "sample"
-    try:
-        df_source = load_sample()
-    except FileNotFoundError:
-        st.info("👆 Carregue um arquivo Excel na barra lateral para começar.")
-        st.stop()
 
 if df_source is None:
     st.info("👆 Carregue um arquivo Excel na barra lateral para começar.")
