@@ -10,7 +10,7 @@ Aplicativo web para análise, identificação de inconsistências e edição de 
 - 🔄 Detecção de ARTs duplicadas e quase idênticas
 - ⚠️ Consistência entre TAREFA, ITEM e PASSO
 - 🎯 Análise de medidas de controle por risco/causa
-- 🔁 Identificação de riscos constantes
+- 🔂 Identificação de riscos, causas e controles constantes
 - 📌 Títulos divergentes e campos vazios
 
 Os dados são processados **apenas na memória da sessão** — nenhuma planilha enviada é armazenada no servidor.

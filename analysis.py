@@ -524,50 +524,7 @@ def check_full_risk_controls(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-#  ANÁLISE 7 – Riscos constantes (repetem em todos os ITEMs da tarefa)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-def find_constant_risks(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Identifica combinações de risco que se repetem em TODOS os ITEMs
-    de um mesmo ID ART, indicando riscos constantes da tarefa.
-    """
-    work = df.copy()
-    for col in RISK_COLS:
-        work[f"_norm_{col}"] = _normalize_series(work[col])
-
-    norm_keys = [f"_norm_{c}" for c in RISK_COLS]
-    results = []
-
-    for id_art, art_group in work.groupby("ID ART"):
-        all_items = art_group["ITEM"].dropna().unique()
-        if len(all_items) < 2:
-            continue
-
-        # Para cada combinação de risco nesse ID, verificar em quais ITEMs aparece
-        risk_combos = art_group.groupby(norm_keys)
-        for keys, risk_group in risk_combos:
-            key_dict = dict(zip(RISK_COLS, keys))
-            if not all(key_dict.values()):
-                continue
-
-            items_with_risk = risk_group["ITEM"].dropna().unique()
-            if len(items_with_risk) == len(all_items) and len(items_with_risk) > 1:
-                linhas = sorted(risk_group["Nº Linha"].tolist()) if "Nº Linha" in risk_group.columns else []
-                results.append({
-                    "ID ART": id_art,
-                    "TAREFA": risk_group["TAREFA"].iloc[0],
-                    **key_dict,
-                    "Qtd ITEMs": len(all_items),
-                    "Nº Linhas": ", ".join(str(x) for x in linhas),
-                    "Risco Constante?": "SIM",
-                })
-
-    return pd.DataFrame(results)
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  ANÁLISE 7b – Risco + Causa + Medida de Controle constantes em todos os ITEMs
+#  ANÁLISE 7 – Risco + Causa + Medida de Controle constantes em todos os ITEMs
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def find_constant_risk_cause_controls(df: pd.DataFrame) -> pd.DataFrame:
@@ -819,7 +776,6 @@ def run_all_analyses(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
         "task_consistency": check_task_step_consistency(df),
         "risk_cause_controls": check_risk_cause_controls(df),
         "full_risk_controls": check_full_risk_controls(df),
-        "constant_risks": find_constant_risks(df),
         "constant_risk_cause_controls": find_constant_risk_cause_controls(df),
         "title_consistency": check_title_consistency(df),
         "missing_fields": check_missing_fields(df),

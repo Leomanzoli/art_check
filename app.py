@@ -14,7 +14,7 @@ from analysis import (
     check_risk_classification, find_duplicate_arts, find_duplicate_arts_trio,
     find_similar_art_differences, check_task_step_consistency,
     check_risk_cause_controls, check_full_risk_controls,
-    find_constant_risks, find_constant_risk_cause_controls,
+    find_constant_risk_cause_controls,
     check_title_consistency, check_missing_fields,
     find_near_duplicate_arts, compare_art_risk_lines,
     KEY_COLS,
@@ -220,7 +220,6 @@ with st.sidebar:
             "⚠️ Análise: Consistência Tarefa/Passo",
             "🎯 Análise: Controles por Risco+Causa",
             "🔗 Análise: Controles por Risco Completo",
-            "🔁 Análise: Riscos Constantes",
             "🔂 Análise: Constantes Completos",
             "⚖️ Análise: Linhas Divergentes por ID",
             "📌 Análise: Títulos Divergentes",
@@ -404,7 +403,6 @@ if page == "📊 Painel Geral":
         ("Consistência Tarefa/Passo", results["task_consistency"]),
         ("Controles por Risco+Causa", results["risk_cause_controls"]),
         ("Controles por Risco Completo", results["full_risk_controls"]),
-        ("Riscos Constantes", results["constant_risks"]),
         ("Constantes Completos", results["constant_risk_cause_controls"]),
         ("Títulos Divergentes", results["title_consistency"]),
         ("Campos Vazios", results["missing_fields"]),
@@ -688,13 +686,19 @@ elif page == "🔍 Análise: Classificação de Risco":
                 if not linhas_sel:
                     st.warning("Selecione ao menos uma linha (checkbox) antes de corrigir.")
                 else:
-                    esperado_map = dict(
-                        zip(result["Nº Linha"], result["RISCO ESPERADO"])
-                    )
+                    # Mapeia Nº Linha -> RISCO ESPERADO calculado pela matriz.
+                    # Garante que o valor esperado não seja nulo/vazio antes de aplicar,
+                    # evitando que a correção apague o RISCO RESIDUAL ao invés de preenchê-lo.
+                    esperado_map = {
+                        int(linha): valor
+                        for linha, valor in zip(result["Nº Linha"], result["RISCO ESPERADO"])
+                        if pd.notna(valor) and str(valor).strip() != ""
+                    }
                     n_corr = 0
                     for linha in linhas_sel:
-                        expected = esperado_map.get(linha)
+                        expected = esperado_map.get(int(linha))
                         if expected is None:
+                            # Linha selecionada não possui valor esperado válido; ignora.
                             continue
                         mask = st.session_state.df_edited["Nº Linha"] == linha
                         if mask.any():
@@ -1155,63 +1159,6 @@ elif page == "🔗 Análise: Controles por Risco Completo":
                 for j, m in enumerate(medidas.split("\n---\n"), 1):
                     st.markdown(f"> **Medida {j}:** {m.strip()}")
             st.markdown(f"**IDs ART envolvidos:** {sel_row.get('IDs ART envolvidos', '')}")
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  ANÁLISE: Riscos Constantes
-# ═══════════════════════════════════════════════════════════════════════════════
-
-elif page == "🔁 Análise: Riscos Constantes":
-    st.markdown("## 🔁 Riscos Constantes da Tarefa")
-    st.markdown(
-        "Identifica combinações de risco que se repetem em **todos os ITEMs** "
-        "de um mesmo ID ART, sugerindo que são riscos inerentes à tarefa inteira."
-    )
-
-    with st.spinner("Analisando..."):
-        result = find_constant_risks(df)
-
-    if result.empty:
-        st.info("ℹ️ Nenhum risco constante identificado (presente em todos os passos).")
-    else:
-        st.success(f"🔁 {len(result)} risco(s) constante(s) identificado(s)")
-
-        # Filtros
-        with st.expander("🔍 Filtros", expanded=True):
-            fc_cr1, fc_cr2, fc_cr3 = st.columns(3)
-            with fc_cr1:
-                id_opts_cr = sorted(result["ID ART"].dropna().unique())
-                id_filter_cr = st.multiselect("ID ART", options=id_opts_cr, default=[], key="cr_id")
-            with fc_cr2:
-                risco_opts_cr = sorted(result["SITUAÇÃO DE RISCO"].dropna().unique()) if "SITUAÇÃO DE RISCO" in result.columns else []
-                risco_filter_cr = st.multiselect("RISCO RESIDUAL (PRIORIDADE)", options=sorted(result["RISCO RESIDUAL (PRIORIDADE)"].dropna().unique()) if "RISCO RESIDUAL (PRIORIDADE)" in result.columns else [], default=[], key="cr_risco")
-            with fc_cr3:
-                tarefa_opts_cr = sorted(result["TAREFA"].dropna().unique()) if "TAREFA" in result.columns else []
-                tarefa_filter_cr = st.multiselect("TAREFA", options=tarefa_opts_cr, default=[], key="cr_tarefa")
-
-        result_view = result.copy()
-        if id_filter_cr:
-            result_view = result_view[result_view["ID ART"].isin(id_filter_cr)]
-        if risco_filter_cr:
-            result_view = result_view[result_view["RISCO RESIDUAL (PRIORIDADE)"].isin(risco_filter_cr)]
-        if tarefa_filter_cr:
-            result_view = result_view[result_view["TAREFA"].isin(tarefa_filter_cr)]
-
-        st.markdown(f"**{len(result_view)}** risco(s) exibido(s)")
-        render_aggrid(result_view.reset_index(drop=True), key="const_risk", height=500)
-        st.download_button(
-            "📥 Exportar Resultado",
-            data=to_excel_bytes(result_view.reset_index(drop=True)),
-            file_name="Riscos_Constantes.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            key="exp_const_risk",
-        )
-
-        # Sugestão
-        st.info(
-            "💡 **Sugestão:** Riscos constantes podem ser consolidados no início "
-            "da ART como riscos gerais da atividade, evitando repetição em cada passo."
-        )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
